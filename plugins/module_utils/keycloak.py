@@ -32,11 +32,12 @@ __metaclass__ = type
 import json
 import sys
 # import urllib
-from six.moves.urllib.parse import quote
+from six.moves.urllib.parse import quote, urlencode
+from six.moves.urllib.error import HTTPError
 from ansible.module_utils.urls import open_url
 
-from ansible.module_utils.six.moves.urllib.parse import urlencode
-from ansible.module_utils.six.moves.urllib.error import HTTPError
+#from ansible.module_utils.six.moves.urllib.parse import urlencode
+#from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils._text import to_text
 
 URL_TOKEN = "{url}/realms/{realm}/protocol/openid-connect/token"
@@ -279,17 +280,92 @@ def get_token(base_url, validate_certs, auth_realm, client_id,
     except KeyError:
         raise KeycloakError(
             'Could not obtain access token from %s' % auth_url)
+def get_service_account_token(base_url, 
+                             validate_certs, 
+                             auth_realm, 
+                             client_id,
+                             client_secret):
+    auth_url = URL_TOKEN.format(url=base_url, realm=auth_realm)
+    temp_payload = {
+        'grant_type': 'client_credentials',
+        'client_id': client_id,
+        'client_secret': client_secret
+    }
+    # Remove empty items, for instance missing client_secret
+    payload = dict(
+        (k, v) for k, v in temp_payload.items() if v is not None)
+    try:
+        r = json.load(open_url(auth_url, method='POST',
+                               validate_certs=validate_certs,
+                               data=urlencode(payload)))
+    except ValueError as e:
+        raise KeycloakError(
+            'API returned invalid JSON when trying to obtain access token from %s: %s'
+            % (auth_url, str(e)))
+    except Exception as e:
+        raise KeycloakError('Could not obtain access token from %s: %s'
+                            % (auth_url, str(e)))
 
+    try:
+        return {
+            'Authorization': 'Bearer ' + r['access_token'],
+            'Content-Type': 'application/json'
+        }
+    except KeyError:
+        raise KeycloakError(
+            'Could not obtain access token from %s' % auth_url)
+
+class KeycloakModule(object):
+    params = {}
+    def __init__(self, 
+                 auth_keycloak_url=None,
+                 auth_client_id=None,
+                 auth_username=None,
+                 auth_password=None,
+                 auth_realm=None,
+                 auth_client_secret=None,
+                 validate_certs=True):
+        self.params['auth_keycloak_url'] = auth_keycloak_url
+        self.params['auth_client_id'] = auth_client_id
+        self.params['auth_username'] = auth_username
+        self.params['auth_password'] = auth_password
+        self.params['auth_realm'] = auth_realm
+        self.params['auth_client_secret'] = auth_client_secret
+        self.params['validate_certs'] = validate_certs
+    def fail_json(self, msg):
+        raise KeycloakError(msg)
 
 class KeycloakAPI(object):
     """ Keycloak API access; Keycloak uses OAuth 2.0 to protect its API, an access token for which
         is obtained through OpenID connect
     """
-    def __init__(self, module, connection_header):
-        self.module = module
+    def __init__(self, 
+                 module=None,
+                 auth_keycloak_url=None,
+                 auth_client_id=None,
+                 auth_username=None,
+                 auth_password=None,
+                 auth_realm=None,
+                 auth_client_secret=None,
+                 validate_certs=True,
+                 connection_header=None):
+        if module is not None:
+            self.module = module
+        else:
+            self.module = KeycloakModule(
+                auth_keycloak_url=auth_keycloak_url,
+                auth_client_id=auth_client_id,
+                auth_username=auth_username,
+                auth_password=auth_password,
+                auth_realm=auth_realm,
+                auth_client_secret=auth_client_secret,
+                validate_certs=validate_certs)
         self.baseurl = self.module.params.get('auth_keycloak_url')
         self.validate_certs = self.module.params.get('validate_certs')
-        self.restheaders = connection_header
+        if connection_header is not None:
+            self.restheaders = connection_header
+        else:
+            self.get_new_access_token()
 
     def get_new_access_token(self):
         self.restheaders = get_token(
