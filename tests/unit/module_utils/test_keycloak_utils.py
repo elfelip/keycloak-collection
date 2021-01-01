@@ -2,7 +2,7 @@ import collections
 import os
 import unittest
 
-from ansible.module_utils.identity.keycloak.keycloak import isDictEquals, remove_arguments_with_value_none
+from ansible_collections.inspq.keycloak.plugins.module_utils.keycloak import isDictEquals, remove_arguments_with_value_none
 from ansible.module_utils.keycloak_utils import ansible2keycloakClientRoles
 from ansible.module_utils.keycloak_utils import keycloak2ansibleClientRoles
 

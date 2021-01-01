@@ -1,4 +1,4 @@
-from ansible.modules.identity.keycloak import keycloak_authentication
+from ansible_collections.inspq.keycloak.plugins.modules import keycloak_authentication
 from units.modules.utils import AnsibleExitJson, ModuleTestCase, set_module_args
 
 class KeycloakAuthenticationTestCase(ModuleTestCase):
