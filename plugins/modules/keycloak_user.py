@@ -265,7 +265,8 @@ changed:
   returned: always
   type: bool
 '''
-from ansible_collections.inspq.keycloak.plugins.module_utils.keycloak import KeycloakAPI, camel, keycloak_argument_spec, get_token, KeycloakError, isDictEquals
+from ansible.module_utils.identity.keycloak.keycloak import KeycloakAPI, camel, \
+    keycloak_argument_spec, get_token, KeycloakError, isDictEquals
 from ansible.module_utils.basic import AnsibleModule
 
 

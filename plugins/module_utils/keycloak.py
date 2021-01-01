@@ -30,9 +30,12 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import json
-
+import sys
+# import urllib
+from six.moves.urllib.parse import quote
 from ansible.module_utils.urls import open_url
-from ansible.module_utils.six.moves.urllib.parse import urlencode, quote
+
+from ansible.module_utils.six.moves.urllib.parse import urlencode
 from ansible.module_utils.six.moves.urllib.error import HTTPError
 from ansible.module_utils._text import to_text
 
@@ -131,20 +134,26 @@ def remove_arguments_with_value_none(argument):
     This is useful when argument_spec include optional keys which dos not need to be
     POST or PUT to Keycloak API.
     :param argument: Dict from which to remove NoneType elements
-    :return: nothing
+    :return: Dict without None values
     """
+
     if type(argument) is dict:
-        keys_to_remove = []
+        newarg = {}
         for key in argument.keys():
-            if argument[key] is None:
-                keys_to_remove.append(key)
-            elif type(argument[key]) is list:
+            if type(argument[key]) is list:
+                newarg[key] = []
                 for element in argument[key]:
-                    remove_arguments_with_value_none(element)
+                    newelement = remove_arguments_with_value_none(element)
+                    if newelement is not None:
+                        newarg[key].append(newelement)
             elif type(argument[key]) is dict:
-                remove_arguments_with_value_none(argument[key])
-        for item in keys_to_remove:
-            argument.pop(item)
+                newvalue = remove_arguments_with_value_none(argument[key])
+                if newvalue is not None:
+                    newarg[key] = newvalue
+            elif argument[key] is not None:
+                newarg[key] = argument[key]
+        return newarg
+    return argument
 
 
 def isDictEquals(dict1, dict2, exclude=None):
@@ -1169,8 +1178,12 @@ class KeycloakAPI(object):
                     if changeNeeded and desiredState != "absent":
                         # If role must be modified
                         newRoleRepresentation = {}
-                        newRoleRepresentation["name"] = newClientRole['name'].decode("utf-8")
-                        newRoleRepresentation["description"] = newClientRole['description'].decode("utf-8")
+                        if sys.version_info.major == 3:
+                            newRoleRepresentation["name"] = newClientRole['name']
+                            newRoleRepresentation["description"] = newClientRole['description']
+                        else:
+                            newRoleRepresentation["name"] = newClientRole['name'].decode("utf-8")
+                            newRoleRepresentation["description"] = newClientRole['description'].decode("utf-8")
                         newRoleRepresentation["composite"] = newClientRole['composite'] if "composite" in newClientRole else False
                         newRoleRepresentation["clientRole"] = newClientRole['clientRole'] if "clientRole" in newClientRole else True
                         data = json.dumps(newRoleRepresentation)

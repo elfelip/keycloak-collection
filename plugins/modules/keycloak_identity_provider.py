@@ -39,7 +39,7 @@ options:
   providerId:
     description:
     - Type of identity provider.
-    required: false
+    default: oidc
     type: str
   enabled:
     description:
@@ -104,6 +104,16 @@ options:
             description:
                 - Client secret to authenticate client on the IdP.
             type: str
+        clientAuthMethod:
+            description:
+                - Authentication method used with this identity provider
+            type: str
+            choices:
+                - client_secret_post
+                - client_secret_basic
+                - client_secret_jwt
+                - private_key_jwt
+            default: client_secret_post
         disableUserInfo:
             description:
                 - Do we need to disable user info endpoint query. Default value is False.
@@ -272,7 +282,8 @@ changed:
   type: bool
 '''
 import copy
-from ansible_collections.inspq.keycloak.plugins.module_utils.keycloak import KeycloakAPI, camel, keycloak_argument_spec, get_token, KeycloakError, isDictEquals, remove_arguments_with_value_none
+from ansible.module_utils.identity.keycloak.keycloak import KeycloakAPI, camel, \
+    keycloak_argument_spec, get_token, KeycloakError, isDictEquals, remove_arguments_with_value_none
 from ansible.module_utils.basic import AnsibleModule
 
 
@@ -287,6 +298,16 @@ def main():
         },
         "clientSecret": {
             "type": "str"
+        },
+        "clientAuthMethod": {
+            "type": "str",
+            "choices": [
+                "client_secret_post",
+                "client_secret_basic",
+                "client_secret_jwt",
+                "private_key_jwt"
+            ],
+            "default": "client_secret_post"
         },
         "disableUserInfo": {
             "type": "str",
@@ -339,7 +360,7 @@ def main():
         realm=dict(type='str', default='master'),
         alias=dict(type='str', required=True),
         displayName=dict(type='str'),
-        providerId=dict(type='str'),
+        providerId=dict(type='str', default='oidc'),
         enabled=dict(type='bool', default=True),
         updateProfileFirstLoginMode=dict(type='str'),
         trustEmail=dict(type='bool'),
@@ -406,16 +427,14 @@ def main():
 
     newIdPConfig = None
     if module.params.get('config') is not None:
-        newIdPConfig = module.params.get('config').copy()
-        remove_arguments_with_value_none(newIdPConfig)
+        newIdPConfig = remove_arguments_with_value_none(module.params.get('config'))
         if 'openIdConfigurationUrl' in newIdPConfig:
             del(newIdPConfig['openIdConfigurationUrl'])
 
     if 'providerId' in newIdPRepresentation and newIdPRepresentation["providerId"] == 'google' and 'userIp' in module.params.get("config"):
         newIdPConfig["userIp"] = module.params.get("config")["userIp"]
 
-    newIdPMappers = module.params.get('mappers')
-    remove_arguments_with_value_none(newIdPMappers)
+    newIdPMappers = remove_arguments_with_value_none(module.params.get('mappers'))
 
     if newIdPConfig is not None:
         if (module.params.get('config') is not None and
