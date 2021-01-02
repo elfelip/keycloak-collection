@@ -7,16 +7,7 @@ Si roulé sur Centos ou RHEL, Apache sera installé et une configuration d'hôte
 Pré-requis
 ------------
 
-Ce rôle utilise les modules Keycloak développés par l'INSPQ. Il doit utiliser la version Ansible disponible sur le référentiel GIT suivant:
-
-	https://github.com/Inspq/ansible.git
-
-Faire un checkout de la branche inspq-livraison-221
-On doit sourcer l'environnement Ansible de ce référentiel avant d'exécuter le playbook. ex:
-
-	source ansible/hacking/env-setup && ansible-playbook -i hosts playbook.yml
-
-On doit pouvoir accéder à une image Docker de Keycloak pour que ca fonctionne. L'image jboss/keycloak du référentiel officiel de Docker peut être utilisé.
+Ce rôle utilise les modules Keycloak développés par l'INSPQ. Ces modules sont inclus dans cette collection.
 
 Variables du rôle
 --------------
