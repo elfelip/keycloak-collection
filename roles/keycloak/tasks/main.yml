@@ -113,7 +113,7 @@
   delay: 60
 
 - name: Creer les REALMs
-  inspq.keycloak.keycloak_realm:
+  elfelip.keycloak.keycloak_realm:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -156,7 +156,7 @@
   #no_log: true
 
 - name: Creer les flux authentification
-  inspq.keycloak.keycloak_authentication:
+  elfelip.keycloak.keycloak_authentication:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -177,7 +177,7 @@
   no_log: true
 
 - name: Creer les identity providers
-  inspq.keycloak.keycloak_identity_provider:
+  elfelip.keycloak.keycloak_identity_provider:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -200,7 +200,7 @@
   #no_log: true
 
 - name: Creer les clients pour les IdP keycloak
-  inspq.keycloak.keycloak_client:
+  elfelip.keycloak.keycloak_client:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -225,7 +225,7 @@
   #no_log: true
 
 - name: Creer les roles
-  inspq.keycloak.keycloak_role:
+  elfelip.keycloak.keycloak_role:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -249,7 +249,7 @@
     var: idp_clients
 
 - name: Configurer le client secret pour les IdP internes
-  inspq.keycloak.keycloak_identity_provider:
+  elfelip.keycloak.keycloak_identity_provider:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -268,7 +268,7 @@
   no_log: true
 
 - name: Creer les clients définis dans l'inventaire
-  inspq.keycloak.keycloak_client:
+  elfelip.keycloak.keycloak_client:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -295,7 +295,7 @@
   #no_log: true
 
 - name: Creer les components definis dans l'inventaire
-  inspq.keycloak.keycloak_component:
+  elfelip.keycloak.keycloak_component:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -319,7 +319,7 @@
   #no_log: true
 
 - name: Creer les groupes definis dans l'inventaire
-  inspq.keycloak.keycloak_group:
+  elfelip.keycloak.keycloak_group:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"
@@ -339,7 +339,7 @@
   #no_log: true
 
 - name: Creer les users définis dans l'inventaire
-  inspq.keycloak.keycloak_user:
+  elfelip.keycloak.keycloak_user:
     auth_client_id: "{{ item.keycloak_auth_client_id | default(keycloak_auth_client_id) }}"
     auth_client_secret: "{{ item.keycloak_auth_client_secret | default(keycloak_auth_client_secret) }}"
     auth_realm: "{{ item.keycloak_auth_realm | default(keycloak_auth_realm) }}"

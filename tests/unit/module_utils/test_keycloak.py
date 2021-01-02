@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase, mock
-from ansible_collections.inspq.keycloak.plugins.module_utils.keycloak import get_token, get_service_account_token, KeycloakAPI, isDictEquals, remove_arguments_with_value_none
+from ansible_collections.elfelip.keycloak.plugins.module_utils.keycloak import get_token, get_service_account_token, KeycloakAPI, isDictEquals, remove_arguments_with_value_none
 from mock_keycloak_server import mocked_open_url, mock_json_load
 
 import jwt
