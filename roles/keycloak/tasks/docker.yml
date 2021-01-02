@@ -1,7 +1,7 @@
 - name: Suppression du conteneur pour {{ app }}
   docker_container:
     name: "{{ keycloak_container_name }}"
-    image: "{{ docker_image }}:{{ docker_image_version }}"
+    image: "{{ keycloak_image }}:{{ keycloak_image_version }}"
     state: absent
   when: delete_existing_container is defined and delete_existing_container
 
@@ -54,7 +54,7 @@
   docker_container:
     name: "{{ keycloak_complete_container_name }}"
     hostname: "{{ keycloak_complete_container_name }}"
-    image: "{{ docker_image }}:{{ docker_image_version }}"
+    image: "{{ keycloak_image }}:{{ keycloak_image_version }}"
     state: started
     restart_policy: unless-stopped
     pull: "{{ keycloak_image_pull | default(True) }}"

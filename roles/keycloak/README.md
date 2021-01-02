@@ -20,8 +20,8 @@ Voici les variables utilisées par le rôle:
 	app_group_id: ID du groupe unix qui exécute Keycloak (défaut: 1000)
 	docker_registry: Adresse du référentiel Docker (défaut: nexus3.inspq.qc.ca:5000)
 	delete_existing_container: Si vraie, le conteneur keycloak sera supprimé er re-créé (défaut: false)
-	docker_image: Image docker a utiliser pour Keycloak (défaut: {{ docker_registry }}/inspq/keycloak)
-	docker_image_version: Version de l'image a utiliser (défaut: latest)
+	keycloak_image: Image docker a utiliser pour Keycloak (défaut: {{ docker_registry }}/inspq/keycloak)
+	keycloak_image_version: Version de l'image a utiliser (défaut: latest)
 	keycloak_user: Identifiant de l'administrateur Keycloak a créer (défaut: admin)
 	keycloak_password: Mot de passe de l'administrateur Keycloak (défaut: admin)
 	keycloak_external_port: Port sur lequel exposer Keycloak (défaut: 18081)
@@ -132,11 +132,11 @@ Créer un conteneur PostgreSQL
 	
 Créer le premier serveur Keycloak
 
-	ansible-playbook -i roles/keycloak/tests/CLUSTER/HOST1/HOST1.hosts -e docker_image=nexus3.inspq.qc.ca:5000/inspq/keycloak -e docker_image_version=9.0.3 roles/keycloak/tests/test.yml
+	ansible-playbook -i roles/keycloak/tests/CLUSTER/HOST1/HOST1.hosts -e keycloak_image=nexus3.inspq.qc.ca:5000/inspq/keycloak -e keycloak_image_version=9.0.3 roles/keycloak/tests/test.yml
 
 Créer le deuxième neeud du cluster
 
-	ansible-playbook -i roles/keycloak/tests/CLUSTER/HOST2/HOST2.hosts -e docker_image=nexus3.inspq.qc.ca:5000/inspq/keycloak -e docker_image_version=9.0.3 roles/keycloak/tests/test.yml	
+	ansible-playbook -i roles/keycloak/tests/CLUSTER/HOST2/HOST2.hosts -e keycloak_image=nexus3.inspq.qc.ca:5000/inspq/keycloak -e keycloak_image_version=9.0.3 roles/keycloak/tests/test.yml	
 
 Déploiement Kubernetes
 ----------------------

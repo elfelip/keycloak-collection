@@ -1,7 +1,7 @@
 ---
 # vars file for sx5-keycloak-msss
 #Fichier de journalisation local (m=Magabit, k=Kilobit)
-docker_image: jboss/keycloak
+keycloak_image: jboss/keycloak
 keycloak_container_name: testkc1
 keycloak_user: admin
 keycloak_password: admin

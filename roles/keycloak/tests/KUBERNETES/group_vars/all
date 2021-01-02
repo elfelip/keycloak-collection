@@ -2,8 +2,8 @@
 # Configuration pour Kubernetes
 connection: local
 gather_facts: no
-docker_image: jboss/keycloak
-docker_image_version: latest
+keycloak_image: jboss/keycloak
+keycloak_image_version: latest
 keycloak_container_type: kubernetes
 keycloak_domain: test.com
 keycloak_user: admin

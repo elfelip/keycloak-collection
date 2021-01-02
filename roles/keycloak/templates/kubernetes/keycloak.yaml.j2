@@ -44,7 +44,7 @@ spec:
       - name: regcred
       containers:
       - name: {{ keycloak_container_name }}
-        image: {{ docker_image }}:{{ docker_image_version }}
+        image: {{ keycloak_image }}:{{ keycloak_image_version }}
         env:
 {% for key, value in keycloak_container_all_env.items() %}
 {% if value is defined and value and value | length > 0 %}

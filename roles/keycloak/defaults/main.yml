@@ -6,8 +6,8 @@ app_group: jboss
 app_group_id: 1000
 docker_registry: nexus3.inspq.qc.ca:5000
 delete_existing_container: false
-docker_image: '{{ docker_registry }}/inspq/keycloak'
-docker_image_version: latest
+keycloak_image: '{{ docker_registry }}/inspq/keycloak'
+keycloak_image_version: latest
 keycloak_user: admin
 keycloak_password: admin
 keycloak_external_port: 18081
