@@ -1,2 +1,6 @@
 tests/output
 *.tar.gz
+*venv
+.noseids
+.vscode/
+**/nosetests*.xml

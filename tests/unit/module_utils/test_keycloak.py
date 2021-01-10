@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase, mock
-from ansible_collections.elfelip.keycloak.plugins.module_utils.keycloak import get_token, get_service_account_token, KeycloakAPI, isDictEquals, remove_arguments_with_value_none
-from mock_keycloak_server import mocked_open_url, mock_json_load
+from plugins.module_utils.keycloak import get_token, get_service_account_token, KeycloakAPI, isDictEquals, remove_arguments_with_value_none, ClientScopeRepresentation, ProtocolMapper
+from tests.unit.module_utils.mock_keycloak_server import mocked_open_url, mock_json_load
 
 import jwt
 
@@ -20,8 +20,8 @@ class KeycloakTestCase(TestCase):
     jwt_algo = 'HS256'
     validate_certs = False
     
-    @mock.patch('inspqcommun.identity.keycloak.open_url', side_effect=mocked_open_url)
-    @mock.patch('inspqcommun.identity.keycloak.json.load', side_effect=mock_json_load)
+    @mock.patch('plugins.module_utils.keycloak.open_url', side_effect=mocked_open_url)
+    @mock.patch('plugins.module_utils.keycloak.json.load', side_effect=mock_json_load)
     def testObtenirUnAccessTokenValide(self, mocked_open_url, mock_json_load):
         authorization_header = get_token(
             base_url=self.keycloak_url,
@@ -35,8 +35,8 @@ class KeycloakTestCase(TestCase):
         decoded_access_token = jwt.decode(access_token, self.jwt_secret, algorithms=[self.jwt_algo], verify=False)
         self.assertEqual(decoded_access_token["preferred_username"], self.keycloak_auth_user, "L'utilisateur authentifié n'est pas le bon: {}".format(decoded_access_token["preferred_username"]))
         
-    @mock.patch('inspqcommun.identity.keycloak.open_url', side_effect=mocked_open_url)
-    @mock.patch('inspqcommun.identity.keycloak.json.load', side_effect=mock_json_load)
+    @mock.patch('plugins.module_utils.keycloak.open_url', side_effect=mocked_open_url)
+    @mock.patch('plugins.module_utils.keycloak.json.load', side_effect=mock_json_load)
     def testObtenirUnAccessTokenValideAvecUnComteDeService(self, mocked_open_url, mock_json_load):
         authorization_header = get_service_account_token(
             base_url=self.keycloak_url,
@@ -48,8 +48,8 @@ class KeycloakTestCase(TestCase):
         decoded_access_token = jwt.decode(access_token, self.jwt_secret, algorithms=[self.jwt_algo], verify=False)
         self.assertEqual(decoded_access_token["preferred_username"], self.keycloak_auth_user, "L'utilisateur authentifié n'est pas le bon: {}".format(decoded_access_token["preferred_username"]))
 
-    @mock.patch('inspqcommun.identity.keycloak.open_url', side_effect=mocked_open_url)
-    @mock.patch('inspqcommun.identity.keycloak.json.load', side_effect=mock_json_load)
+    @mock.patch('plugins.module_utils.keycloak.open_url', side_effect=mocked_open_url)
+    @mock.patch('plugins.module_utils.keycloak.json.load', side_effect=mock_json_load)
     def testCreerUnObjetKeycloakAvecToken(self, mocked_open_url, mock_json_load):
         kc = KeycloakAPI(auth_keycloak_url=self.keycloak_url,
                  auth_client_id=self.keycloak_auth_client_id,
@@ -209,5 +209,50 @@ class KeycloakRemoveNoneValuesFromDictTest(TestCase):
     def testDictWithListAndDictThreeLevel(self):
         result3 = remove_arguments_with_value_none(self.test3)
         self.assertDictEqual(result3, self.expected3, str(result3))
+
+
+class ClientScopeRepresentationTestCase(TestCase):
+    clientScopeTest = {
+      "id": "4657a25e-9db1-40b5-a1f2-c3634f79c3f2",
+      "name": "kube-lacave-audience",
+      "description": "Scope pour Kubernetes",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "id": "fb27cacd-6f5d-4cc6-b7af-9b2c2e8a0da5",
+          "name": "kube-lacave-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": "false",
+          "config": {
+            "included.client.audience": "kubelacave",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+
+    def TestGetClientScopeFromRepresentation(self):
+        scope = ClientScopeRepresentation(rep=self.clientScopeTest)
+        self.assertEqual(scope.id, self.clientScopeTest['id'], "Incorrect client scope id. {0} != {1}".format(scope.id, self.clientScopeTest['id']))
+        self.assertEqual(scope.name, self.clientScopeTest['name'], "Incorrect client scope name. {0} != {1}".format(scope.name, self.clientScopeTest['name']))
+        self.assertEqual(scope.description, self.clientScopeTest['description'], "Incorrect client scope description. {0} != {1}".format(scope.description, self.clientScopeTest['description']))
+        self.assertEqual(scope.protocol, self.clientScopeTest['protocol'], "Incorrect client scope protocol. {0} != {1}".format(scope.protocol, self.clientScopeTest['protocol']))
+        self.assertEqual(scope.attributes, self.clientScopeTest['attributes'], "Incorrect client scope attributes. {0} != {1}".format(str(scope.attributes), str(self.clientScopeTest['attributes'])))
+
+    def TestGetProtocolMapperFromRepresentation(self):
+        mapper = ProtocolMapper(rep=self.clientScopeTest['protocolMappers'][0])
+        self.assertEqual(mapper.id, self.clientScopeTest['protocolMappers'][0]['id'], "Incorrect protocol mapper id. {0} != {1}".format(mapper.id, self.clientScopeTest['protocolMappers'][0]['id']))
+        self.assertEqual(mapper.name, self.clientScopeTest['protocolMappers'][0]['name'], "Incorrect protocol mapper name. {0} != {1}".format(mapper.name, self.clientScopeTest['protocolMappers'][0]['name']))
+        self.assertEqual(mapper.protocol, self.clientScopeTest['protocolMappers'][0]['protocol'], "Incorrect protocol mapper protocol. {0} != {1}".format(mapper.protocol, self.clientScopeTest['protocolMappers'][0]['protocol']))
+        self.assertEqual(mapper.protocolMapper, self.clientScopeTest['protocolMappers'][0]['protocolMapper'], "Incorrect protocol mapper protocolMapper. {0} != {1}".format(mapper.protocolMapper, self.clientScopeTest['protocolMappers'][0]['protocolMapper']))
+        self.assertEqual(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired'], "Incorrect protocol mapper consentRequired. {0} != {1}".format(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired']))
+        self.assertEqual(mapper.config, self.clientScopeTest['protocolMappers'][0]['config'], "Incorrect protocol mapper config. {0} != {1}".format(str(mapper.config), str(self.clientScopeTest['protocolMappers'][0]['config'])))
+
     
         

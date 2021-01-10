@@ -54,6 +54,9 @@ URL_CLIENT_CLIENT_SCOPE_MAPPINGS = "{url}/admin/realms/{realm}/clients/{id}/scop
 URL_CLIENTTEMPLATE = "{url}/admin/realms/{realm}/client-templates/{id}"
 URL_CLIENTTEMPLATES = "{url}/admin/realms/{realm}/client-templates"
 
+URL_CLIENT_SCOPES = "{url}/admin/realms/{realm}/client-scopes"
+URL_CLIENT_SCOPE = "{url}/admin/realms/{realm}/client-scopes/{id}"
+
 URL_GROUPS = "{url}/admin/realms/{realm}/groups"
 URL_GROUP = "{url}/admin/realms/{realm}/groups/{groupid}"
 URL_GROUP_CLIENT_ROLE_MAPPING = "{url}/admin/realms/{realm}/groups/{groupid}/role-mappings/clients/{clientid}"
@@ -3419,3 +3422,138 @@ class KeycloakAPI(object):
             return changed
         except Exception as e:
             raise e
+"""
+    {
+      "id": "4657a25e-9db1-40b5-a1f2-c3634f79c3f2",
+      "name": "kube-lacave-audience",
+      "description": "Scope pour Kubernetes",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "id": "fb27cacd-6f5d-4cc6-b7af-9b2c2e8a0da5",
+          "name": "kube-lacave-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "kubelacave",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+"""
+class ClientScopeRepresentation():
+    name = None
+    id = None
+    description = None
+    protocol = "openid-connect"
+    attributes = {}
+    protocolMappers = []
+
+    def __init__(self, id=None, name=None, description=None, protocol="openid-connect", attributes={}, protocolMappers=[], rep=None):
+        if rep is not None:
+            self.fromRepresentation(rep=rep)
+        else:
+            self.id = id
+            self.name = name
+            self.description = description
+            self.protocol = protocol
+            self.attributes = attributes
+            self.protocolMappers = protocolMappers
+
+    def getRepresentation(self):
+        rep = {}
+        if self.id is not None:
+            rep['id'] = self.id
+        if self.name is not None:
+            rep['name'] = self.name
+        if self.description is not None:
+            rep['description'] = self.description
+        rep['protocol'] = self.protocol
+        rep['attributes'] = self.attributes
+        mappers = []
+        for mapper in self.protocolMappers:
+            mappers.append(mapper.getRepresentation())
+        rep['protocolMappers'] = mappers
+
+    def fromRepresentation(self, rep={}):
+        for key in rep.keys():
+            if key == 'id':
+                self.id = rep[key]
+            elif key == 'name':
+                self.name = rep[key]
+            elif key == 'description':
+                self.description = rep[key]
+            elif key == 'protocol':
+                self.protocol = rep[key]
+            elif key == 'attributes':
+                self.attributes = rep[key]
+            elif key == 'protocolMappers':
+                for mapper in rep[key]:
+                    self.protocolMappers.append(ProtocolMapper(rep=mapper))  
+
+"""
+      "protocolMappers": [
+        {
+          "id": "fb27cacd-6f5d-4cc6-b7af-9b2c2e8a0da5",
+          "name": "kube-lacave-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "kubelacave",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+"""
+class ProtocolMapper():
+    id = None
+    name = None
+    protocol = "openid-connect"
+    protocolMapper = None
+    consentRequired = False
+    config = {}
+    def __init__(self, id=None, name=None, protocol="openid-connect", protocolMapper=None, consentRequired=False, config={}, rep=None):
+        if rep is not None:
+            self.fromRepresentation(rep=rep)
+        else:
+            self.id = id
+            self.name = name
+            self.protocol = protocol
+            self.protocolMapper = protocolMapper
+            self.consentRequired = consentRequired
+            self.config = config
+
+    def getRepresentation(self):
+        rep = {}
+        if self.id is not None:
+            rep['id'] = self.id
+        if self.name is not None:
+            rep['name'] = self.name
+        rep['protocol'] = self.protocol
+        if self.protocolMapper is not None:
+            rep['protocolMapper'] = self.protocolMapper
+        rep['consentRequired'] = self.consentRequired
+        rep['config'] = self.config
+
+    def fromRepresentation(self, rep={}):
+        for key in rep.keys():
+            if key == 'id':
+                self.id = rep[key]
+            elif key == 'name':
+                self.name = rep[key]
+            elif key == 'protocol':
+                self.protocol = rep[key]
+            elif key == 'protocolMapper':
+                self.protocolMapper = rep[key]
+            elif key == 'consentRequired':
+                self.consentRequired = rep[key]
+            elif key == 'config':
+                self.config = rep[key]
