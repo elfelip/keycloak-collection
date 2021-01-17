@@ -1,8 +1,8 @@
 import collections
 import os
 import copy
-from ansible.modules.identity.keycloak import keycloak_identity_provider
-from units.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
+from plugins.modules import keycloak_identity_provider
+from tests.unit.module_utils.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
 
 class KeycloakIdentityProviderTestCase(ModuleTestCase):
     defaultClientAuthMethod = "client_secret_post"

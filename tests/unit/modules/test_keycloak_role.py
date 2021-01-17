@@ -1,7 +1,6 @@
-from ansible.module_utils.identity.keycloak.keycloak import isDictEquals
-from ansible.module_utils.keycloak_utils import loginAndSetHeaders
-from ansible.modules.identity.keycloak import keycloak_role
-from units.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
+from plugins.module_utils.keycloak import isDictEquals, get_token
+from plugins.modules import keycloak_role
+from tests.unit.module_utils.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
 import requests
 import json
 
@@ -266,7 +265,15 @@ class KeycloakRoleTestCase(ModuleTestCase):
         self.roleSvcBaseUrl = self.url + "/auth/admin/realms/master/roles/"
         # Create Clients
         try:
-            self.headers = loginAndSetHeaders(self.url, username, password)
+            #self.headers = get_token(self.url, username, password)
+            self.headers = get_token(
+                base_url=self.url+'/auth',
+                auth_realm="master",
+                client_id="admin-cli",
+                auth_username=username,
+                auth_password=password,
+                validate_certs=False,
+                client_secret=None)
             clientSvcBaseUrl = self.url + "/auth/admin/realms/master/clients/"
             
             for testClient in self.testClients:
@@ -301,7 +308,15 @@ class KeycloakRoleTestCase(ModuleTestCase):
         password = "admin"
         # Delete Clients
         try:
-            self.headers = loginAndSetHeaders(self.url, username, password)
+            #self.headers = get_token(self.url, username, password)
+            self.headers = get_token(
+                base_url=self.url+'/auth',
+                auth_realm="master",
+                client_id="admin-cli",
+                auth_username=username,
+                auth_password=password,
+                validate_certs=False,
+                client_secret=None)
             clientSvcBaseUrl = self.url + "/auth/admin/realms/master/clients/"
             
             for testClient in self.testClients:

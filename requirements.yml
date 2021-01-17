@@ -1,4 +1,4 @@
-- name: keycloak
-  src: https://gitlab.forge.gouv.qc.ca/ansible-inspq/roles/keycloak.git
-  version: master
-  scm: git
+# Install a collection from Ansible Galaxy.
+collections:
+  - name: elfelip.keycloak
+    version: 0.1.3

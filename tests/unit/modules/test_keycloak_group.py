@@ -14,10 +14,9 @@ import collections
 import os
 import unittest
 import socket
-from ansible.modules.identity.keycloak import keycloak_group
-from ansible.module_utils.identity.keycloak.keycloak import isDictEquals
-from ansible.modules.identity.keycloak import keycloak_component
-from units.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
+from plugins.modules import keycloak_group, keycloak_component
+from plugins.module_utils.keycloak import isDictEquals
+from tests.unit.module_utils.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
 
 class KeycloakGroupTestCase(ModuleTestCase):
     userStorageComponent = {

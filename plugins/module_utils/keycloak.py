@@ -2768,7 +2768,7 @@ class KeycloakAPI(object):
                     headers=self.restheaders))
             return composites
         except Exception as e:
-            self.module.fail_json(msg='Could not get realm role %s realm composites %s for realm %s: %s'
+            self.module.fail_json(msg='Could not get realm role %s realm composites for realm %s: %s'
                                   % (name, realm, str(e)))
 
     def create_realm_role_composites(self, newCompositesToCreate, name, realm='master'):

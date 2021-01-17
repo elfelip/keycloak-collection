@@ -1,6 +1,6 @@
-from ansible.modules.identity.keycloak import keycloak_user, keycloak_group, keycloak_role
-from ansible.module_utils.identity.keycloak.keycloak import isDictEquals
-from units.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
+from plugins.modules import keycloak_user, keycloak_group, keycloak_role
+from plugins.module_utils.keycloak import isDictEquals
+from tests.unit.module_utils.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
 
 class KeycloakUserTestCase(ModuleTestCase):
     testGroups = [

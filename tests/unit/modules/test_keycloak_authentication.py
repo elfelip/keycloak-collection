@@ -1,5 +1,5 @@
-from ansible_collections.inspq.keycloak.plugins.modules import keycloak_authentication
-from units.modules.utils import AnsibleExitJson, ModuleTestCase, set_module_args
+from plugins.modules import keycloak_authentication
+from tests.unit.module_utils.utils import AnsibleExitJson, ModuleTestCase, set_module_args
 
 class KeycloakAuthenticationTestCase(ModuleTestCase):
     authenticationTestFlows = [

@@ -283,7 +283,7 @@ group:
         view: true
 '''
 
-from ansible_collections.elfelip.keycloak.plugins.module_utils.keycloak import KeycloakAPI, camel, \
+from plugins.module_utils.keycloak import KeycloakAPI, camel, \
     keycloak_argument_spec, get_token, KeycloakError
 from ansible.module_utils.basic import AnsibleModule
 

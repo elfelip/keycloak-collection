@@ -4,9 +4,9 @@
 # Use the following command to run a Keycloak server with Docker:
 # docker run -d --rm --name testkc -p 18081:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin jboss/keycloak:latest
 
-from ansible.modules.identity.keycloak import keycloak_client
-from units.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
-from ansible.module_utils.identity.keycloak.keycloak import isDictEquals
+from plugins.modules import keycloak_client
+from tests.unit.module_utils.utils  import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
+from plugins.module_utils.keycloak import isDictEquals
 
 
 class KeycloakClientTestCase(ModuleTestCase):

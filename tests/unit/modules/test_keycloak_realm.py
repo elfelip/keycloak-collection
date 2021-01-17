@@ -1,9 +1,9 @@
 import collections
 import os
 
-from ansible.modules.identity.keycloak import keycloak_realm
-from units.modules.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
-from ansible.module_utils.identity.keycloak.keycloak import isDictEquals
+from plugins.modules import keycloak_realm
+from tests.unit.module_utils.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
+from plugins.module_utils.keycloak import isDictEquals
 
 class KeycloakRealmTestCase(ModuleTestCase):
     toCreateRealm = {
