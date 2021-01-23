@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase, mock
-from plugins.module_utils.keycloak import get_token, get_service_account_token, KeycloakAPI, isDictEquals, remove_arguments_with_value_none, ClientScopeRepresentation, ProtocolMapper
+from plugins.module_utils.keycloak import get_token, get_service_account_token, KeycloakAPI, isDictEquals, remove_arguments_with_value_none, ClientScope, ProtocolMapper
 from tests.unit.module_utils.mock_keycloak_server import mocked_open_url, mock_json_load
 
 import jwt
@@ -238,7 +238,7 @@ class ClientScopeRepresentationTestCase(TestCase):
     }
 
     def TestGetClientScopeFromRepresentation(self):
-        scope = ClientScopeRepresentation(rep=self.clientScopeTest)
+        scope = ClientScope(rep=self.clientScopeTest)
         self.assertEqual(scope.id, self.clientScopeTest['id'], "Incorrect client scope id. {0} != {1}".format(scope.id, self.clientScopeTest['id']))
         self.assertEqual(scope.name, self.clientScopeTest['name'], "Incorrect client scope name. {0} != {1}".format(scope.name, self.clientScopeTest['name']))
         self.assertEqual(scope.description, self.clientScopeTest['description'], "Incorrect client scope description. {0} != {1}".format(scope.description, self.clientScopeTest['description']))
@@ -248,6 +248,21 @@ class ClientScopeRepresentationTestCase(TestCase):
     def TestGetProtocolMapperFromRepresentation(self):
         mapper = ProtocolMapper(rep=self.clientScopeTest['protocolMappers'][0])
         self.assertEqual(mapper.id, self.clientScopeTest['protocolMappers'][0]['id'], "Incorrect protocol mapper id. {0} != {1}".format(mapper.id, self.clientScopeTest['protocolMappers'][0]['id']))
+        self.assertEqual(mapper.name, self.clientScopeTest['protocolMappers'][0]['name'], "Incorrect protocol mapper name. {0} != {1}".format(mapper.name, self.clientScopeTest['protocolMappers'][0]['name']))
+        self.assertEqual(mapper.protocol, self.clientScopeTest['protocolMappers'][0]['protocol'], "Incorrect protocol mapper protocol. {0} != {1}".format(mapper.protocol, self.clientScopeTest['protocolMappers'][0]['protocol']))
+        self.assertEqual(mapper.protocolMapper, self.clientScopeTest['protocolMappers'][0]['protocolMapper'], "Incorrect protocol mapper protocolMapper. {0} != {1}".format(mapper.protocolMapper, self.clientScopeTest['protocolMappers'][0]['protocolMapper']))
+        self.assertEqual(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired'], "Incorrect protocol mapper consentRequired. {0} != {1}".format(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired']))
+        self.assertEqual(mapper.config, self.clientScopeTest['protocolMappers'][0]['config'], "Incorrect protocol mapper config. {0} != {1}".format(str(mapper.config), str(self.clientScopeTest['protocolMappers'][0]['config'])))
+
+    def TestProtocolMapperFromModuleParams(self):
+        module_param = {}
+        mapper_param = self.clientScopeTest['protocolMappers'][0]
+        module_param['name'] = mapper_param.get('name')
+        module_param['protocol'] = mapper_param.get('protocol')
+        module_param['protocolMapper'] = mapper_param.get('protocolMapper')
+        module_param['consentRequired'] = mapper_param.get('consentRequired')
+        module_param['config'] = mapper_param.get('config')
+        mapper = ProtocolMapper(module_params=module_param)
         self.assertEqual(mapper.name, self.clientScopeTest['protocolMappers'][0]['name'], "Incorrect protocol mapper name. {0} != {1}".format(mapper.name, self.clientScopeTest['protocolMappers'][0]['name']))
         self.assertEqual(mapper.protocol, self.clientScopeTest['protocolMappers'][0]['protocol'], "Incorrect protocol mapper protocol. {0} != {1}".format(mapper.protocol, self.clientScopeTest['protocolMappers'][0]['protocol']))
         self.assertEqual(mapper.protocolMapper, self.clientScopeTest['protocolMappers'][0]['protocolMapper'], "Incorrect protocol mapper protocolMapper. {0} != {1}".format(mapper.protocolMapper, self.clientScopeTest['protocolMappers'][0]['protocolMapper']))

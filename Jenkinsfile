@@ -13,23 +13,27 @@ pipeline {
 	    RHSSO_VERSION='latest'
 	    THREEEIGHTYNINEDS_IMAGE='minkwe/389ds'
 	    THREEEIGHTYNINEDS_VERSION='latest'
-	    SX5SPCONFIG_IMAGE='nexus3.inspq.qc.ca:5000/inspq/sx5-sp-config'
-	    SX5SPCONFIG_VERSION='latest'
-	    EMAIL_TO = 'mathieu.couture@inspq.qc.ca,etienne.sadio@inspq.qc.ca,soleman.merchan@inspq.qc.ca,philippe.gauthier@inspq.qc.ca,pierre-olivier.chiasson@inspq.qc.ca,eric.parent@inspq.qc.ca'
+	    EMAIL_TO = 'elfelip@yahoo.com'
+        VENV_PATH = '/tmp/kc-venv'
 	}
 
     stages {
-        stage ('Configurer Ansible') {
+        stage ('Create Python VENV and install requirements') {
             steps {
-                sh "printf '[defaults]\nroles_path=roles\nhost_key_checking = False' > ansible.cfg"
-            	sh "ansible-galaxy install -r requirements.yml"
+                sh "python3 -m venv ${VENV_PATH}"
+            	sh "source ${VENV_PATH} && python3 -m pip install -U -r requirements.txt"
+            }
+        }
+        stage ('Build collection'){
+            steps {
+                sh "source ${VENV_PATH} && ansible-galaxy collection build"
             }
         }
         stage ('Validation des modules ansibles') {
             steps {
-                sh "python3 bin/ansible-test sanity --test pep8 lib/ansible/module_utils/identity/keycloak/keycloak.py lib/ansible/modules/identity/keycloak/keycloak_user.py lib/ansible/modules/identity/keycloak/keycloak_authentication.py lib/ansible/modules/identity/keycloak/keycloak_client.py lib/ansible/modules/identity/keycloak/keycloak_clienttemplate.py lib/ansible/modules/identity/keycloak/keycloak_component.py lib/ansible/modules/identity/keycloak/keycloak_group.py lib/ansible/modules/identity/keycloak/keycloak_identity_provider.py lib/ansible/modules/identity/keycloak/keycloak_realm.py lib/ansible/modules/identity/keycloak/keycloak_role.py lib/ansible/modules/identity/sx5/sx5_habilitation.py lib/ansible/modules/identity/sx5/sx5_sp_config_system.py lib/ansible/modules/identity/user_provisioning/scim_user.py"            
-                // sh "python3 bin/ansible-test sanity --test validate-modules lib/ansible/module_utils/keycloak.py lib/ansible/modules/identity/keycloak/keycloak_user.py lib/ansible/modules/identity/keycloak/keycloak_authentication.py lib/ansible/modules/identity/keycloak/keycloak_client.py lib/ansible/modules/identity/keycloak/keycloak_clienttemplate.py lib/ansible/modules/identity/keycloak/keycloak_component.py lib/ansible/modules/identity/keycloak/keycloak_group.py lib/ansible/modules/identity/keycloak/keycloak_identity_provider.py lib/ansible/modules/identity/keycloak/keycloak_realm.py lib/ansible/modules/identity/keycloak/keycloak_role.py lib/ansible/modules/identity/sx5/sx5_habilitation.py lib/ansible/modules/identity/sx5/sx5_sp_config_system.py lib/ansible/modules/identity/user_provisioning/scim_user.py"
-                sh "python3 bin/ansible-test sanity --test validate-modules lib/ansible/module_utils/identity/keycloak/keycloak.py lib/ansible/modules/identity/keycloak/keycloak_user.py lib/ansible/modules/identity/keycloak/keycloak_authentication.py lib/ansible/modules/identity/keycloak/keycloak_client.py lib/ansible/modules/identity/keycloak/keycloak_clienttemplate.py lib/ansible/modules/identity/keycloak/keycloak_component.py lib/ansible/modules/identity/keycloak/keycloak_group.py lib/ansible/modules/identity/keycloak/keycloak_identity_provider.py lib/ansible/modules/identity/keycloak/keycloak_realm.py lib/ansible/modules/identity/keycloak/keycloak_role.py lib/ansible/modules/identity/sx5/sx5_habilitation.py lib/ansible/modules/identity/user_provisioning/scim_user.py"
+                sh "source ${VENV_PATH} && ansible-galaxy collection install elfelip-keycloak*.tar.gz -p collections"
+                sh "source ${VENV_PATH} && cd collections/ansible_collections/elfelip/keycloak && ansible-test sanity --test pep8"
+                sh "source ${VENV_PATH} && cd collections/ansible_collections/elfelip/keycloak && ansible-test sanity --test validate-modules"
            	}
         }
         stage ('Tests sécurités des modules ansible sx5') {

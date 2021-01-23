@@ -3422,6 +3422,16 @@ class KeycloakAPI(object):
             return changed
         except Exception as e:
             raise e
+    
+    def search_client_scope_by_name(self, name, realm='master'):
+        """
+        Search client scope by name
+        :param name: name of the scope to search for
+        :param realm: Realm
+        :return: client scope objects list. An empty list is returns if not found
+        """
+        client_scopes = []
+        return client_scopes
 """
     {
       "id": "4657a25e-9db1-40b5-a1f2-c3634f79c3f2",
@@ -3448,17 +3458,29 @@ class KeycloakAPI(object):
       ]
     }
 """
-class ClientScopeRepresentation():
+class ClientScope():
     name = None
     id = None
     description = None
     protocol = "openid-connect"
     attributes = {}
     protocolMappers = []
+    protocol_choices = ["openid-connect", "saml" ]
 
-    def __init__(self, id=None, name=None, description=None, protocol="openid-connect", attributes={}, protocolMappers=[], rep=None):
+    def __init__(self, id=None, name=None, description=None, protocol="openid-connect", attributes={}, protocolMappers=[], rep=None, module_params=None):
         if rep is not None:
             self.fromRepresentation(rep=rep)
+        elif module_params is not None:
+            self.name = module_params.get('name') if 'name' in module_params else None
+            self.description = module_params.get('description') if description in module_params else None
+            self.protocol = module_params.get('protocol') if 'protocol' in module_params else 'openid-connect'
+            self.attributes = module_params.get('attributes') if 'attributes' in module_params else {}
+            self.protocolMappers = []
+            if 'protocolMappers' in module_params:
+                for mapper_param in module_params.get('protocolMappers'):
+                    mapper = ProtocolMapper(module_params=mapper_param)
+                    self.protocolMappers.append(mapper)
+
         else:
             self.id = id
             self.name = name
@@ -3466,6 +3488,20 @@ class ClientScopeRepresentation():
             self.protocol = protocol
             self.attributes = attributes
             self.protocolMappers = protocolMappers
+
+    def argument_spec(self):
+        """
+        Returns argument_spec of options for client scopes
+
+        :return: argument_spec dict
+        """
+        return dict(
+            name=dict(type='str', required=True),
+            description=dict(type='str', required=False),
+            protocol=dict(type='str', default='openid-connect', choices=self.protocol_choices),
+            attributes=dict(type='dict', default={}),
+            protocolMappers=dict(type='list', default=[], options=ProtocolMapper.argument_spec())
+        )    
 
     def getRepresentation(self):
         rep = {}
@@ -3517,12 +3553,48 @@ class ProtocolMapper():
     id = None
     name = None
     protocol = "openid-connect"
-    protocolMapper = None
+    protocolMapper = "oidc-audience-mapper"
     consentRequired = False
     config = {}
-    def __init__(self, id=None, name=None, protocol="openid-connect", protocolMapper=None, consentRequired=False, config={}, rep=None):
+    protocol_choices = ["openid-connect", "saml" ]
+    protocolMapper_choices = [
+        "oidc-audience-mapper",
+        "oidc-usermodel-realm-role-mapper",
+        "oidc-hardcoded-claim-mapper",
+        "oidc-sha256-pairwise-sub-mapper",
+        "oidc-claims-param-token-mapper",
+        "oidc-usersessionmodel-note-mapper",
+        "oidc-address-mapper",
+        "oidc-hardcoded-role-mapper",
+        "oidc-usermodel-client-role-mapper",
+        "oidc-usermodel-property-mapper",
+        "oidc-full-name-mapper",
+        "oidc-usermodel-attribute-mapper",
+        "oidc-allowed-origins-mapper",
+        "oidc-group-membership-mapper",
+        "oidc-role-name-mapper",
+        "oidc-audience-resolve-mapper",
+        "saml-javascript-mapper",
+        "saml-user-attribute-mapper",
+        "saml-hardcode-role-mapper",
+        "saml-hardcode-attribute-mapper",
+        "saml-role-name-mapper",
+        "saml-audience-resolve-mapper",
+        "saml-user-session-note-mapper",
+        "saml-user-property-mapper",
+        "saml-group-membership-mapper",
+        "saml-role-list-mapper",
+        "saml-audience-mapper"
+    ]
+    def __init__(self, id=None, name=None, protocol="openid-connect", protocolMapper=None, consentRequired=False, config={}, rep=None, module_params=None):
         if rep is not None:
             self.fromRepresentation(rep=rep)
+        elif module_params is not None:
+            self.name = module_params.get('name') if 'name' in module_params else None
+            self.protocol = module_params.get('protocol') if 'protocol' in module_params else 'openid-connect'
+            self.protocolMapper = module_params.get('protocolMapper') if 'protocolMapper' in module_params else 'oidc-audience-mapper'
+            self.consentRequired = module_params.get('consentRequired') if 'consentRequired' in module_params else False
+            self.config = module_params.get('config') if 'config' in module_params else {}
         else:
             self.id = id
             self.name = name
@@ -3531,6 +3603,19 @@ class ProtocolMapper():
             self.consentRequired = consentRequired
             self.config = config
 
+    def argument_spec(self):
+        """
+        Returns argument_spec of options for client scopes
+
+        :return: argument_spec dict
+        """
+        return dict(
+            name=dict(type='str', required=True),
+            protocol=dict(type='str', default='openid-connect', choices=self.protocol_choices),
+            protocolMapper=dict(type='string', default="protocolMapper", choices=self.protocolMapper_choices),
+            consentRequired=dict(type='bool', default=False),
+            config=dict(type='dict', default={})
+        )    
     def getRepresentation(self):
         rep = {}
         if self.id is not None:
