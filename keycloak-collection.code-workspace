@@ -13,8 +13,7 @@
 				"type": "python",
 				"request": "launch",
 				"program": "${file}",
-				"console": "integratedTerminal",
-				"cwd": "/home/felip/git/github/elfelip/keycloak-collection"
+				"console": "integratedTerminal"
 			}
 		]
 	}

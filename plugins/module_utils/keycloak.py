@@ -3154,7 +3154,7 @@ class KeycloakAPI(object):
         """
         try:
             roles = []
-            roles.add(role)
+            roles.append(role)
             return self.delete_user_realm_roles(
                 user_id=user_id,
                 roles=roles,
@@ -3500,7 +3500,7 @@ class ClientScope():
             description=dict(type='str', required=False),
             protocol=dict(type='str', default='openid-connect', choices=self.protocol_choices),
             attributes=dict(type='dict', default={}),
-            protocolMappers=dict(type='list', default=[], options=ProtocolMapper.argument_spec())
+            protocolMappers=dict(type='list', default=[], options=ProtocolMapper().argument_spec())
         )    
 
     def getRepresentation(self):
