@@ -97,6 +97,7 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
                 headers=self.headers)
             scopes = getResponse.json()
             scopeFound = False
+            scope = {}
             for scope in scopes:
                 if scope['name'] == testClientScope['name']:
                     scopeFound = True
@@ -105,9 +106,10 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
                 id = scope['id']
                 deleteResponse = requests.delete(
                     self.clientScopeUrl.format(baseurl=self.baseurl, id=id), 
-                        headers=self.headers)
+                    headers=self.headers)
                 print("Status code: {0}".format(str(deleteResponse.status_code)))
 
 
-    def TestCreateNewClientScope(self):
+    def test_create_new_client_scope(self):
         print("Test")
+        self.assertEqual("test", "test", "test n'est pas test")

@@ -93,6 +93,17 @@ You can run the collection's test suites with the commands:
     ansible-test sanity --docker -v --color
     ansible-test integration --docker -v --color
 
+## Testing mdules ait nosetest
+
+You can Test modules using Keycloak and 389ds container with Python Nose. This enables debug/breakpoint fonctionnality.
+
+First, you need to create the containers:
+
+  docker run -d --rm --name testldap -p 10389:389 minkwe/389ds:latest
+  docker run -d --rm --name kctest -link testldap:testldap -p 18081:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin jboss/keycloak:latest
+
+Modules unit test cases may then be executed and debugged. The unit tests files are in the tests/unit/modules directory
+
 ## License
 
 GNU General Public License v3.0 or later
