@@ -106,6 +106,10 @@ URL_REALM_ROLE_COMPOSITES = "{url}/admin/realms/{realm}/roles/{name}/composites"
 URL_REALM_ROLE_COMPOSITES_REALM = URL_REALM_ROLE_COMPOSITES + "/realm"
 URL_REALM_ROLE_COMPOSITES_CLIENT = URL_REALM_ROLE_COMPOSITES + "/clients/{client}"
 
+URL_CLIENT_SCOPES = "{url}/admin/realms/{realm}/client-scopes"
+URL_CLIENT_SCOPE = URL_CLIENT_SCOPES + "/{id}"
+URL_CLIENT_SCOPE_PROTOCOL_MAPPERS = URL_CLIENT_SCOPE + "/protocol-mappers"
+URL_CLIENT_SCOPE_PROTOCOL_MAPPERS_ADD_MODELS = URL_CLIENT_SCOPE_PROTOCOL_MAPPERS + "/add-models"
 
 def keycloak_argument_spec():
     """
@@ -3431,7 +3435,61 @@ class KeycloakAPI(object):
         :return: client scope objects list. An empty list is returns if not found
         """
         client_scopes = []
+        try:
+            clientscopesrep = json.load(
+                open_url(
+                    URL_CLIENT_SCOPES.format(
+                        url=self.baseurl,
+                        realm=realm),
+                    method='GET',
+                    headers=self.restheaders,
+                    validate_certs=self.validate_certs))
+            scopeFound = False
+            for scope in clientscopesrep:
+                if scope['name'] == name:
+                    client_scopes.append(ClientScope(rep=scope))
+        except HTTPError as e:
+            if e.code == 404:
+                return None
+            else:
+                self.module.fail_json(msg='Could not obtain client scope %s for realm %s: %s'
+                                      % (name, realm, str(e)))
+        except ValueError as e:
+            self.module.fail_json(msg='API returned incorrect JSON when trying to obtain client scope %s for realm %s: %s'
+                                      % (name, realm, str(e)))
+        except Exception as e:
+            self.module.fail_json(msg='Could not obtain client scope %s for realm %s: %s'
+                                      % (name, realm, str(e)))        
         return client_scopes
+    def create_client_scope(self, client_scope, realm='master'):
+        postResponse = None
+        try:
+            rep = client_scope.getRepresentation()
+            data=json.dumps(rep)
+            postResponse = open_url(
+                URL_CLIENT_SCOPES.format(
+                    url=self.baseurl,
+                    realm=realm),
+                method='POST',
+                headers=self.restheaders,
+                data=data,
+                validate_certs=self.validate_certs)
+        except HTTPError as e:
+            if e.code == 404:
+                return None
+            else:
+                self.module.fail_json(msg='Could not create client scope %s for realm %s: %s'
+                                      % (client_scope.name, realm, str(e)))
+        except ValueError as e:
+            self.module.fail_json(msg='API returned incorrect JSON when trying to obtain client scope %s for realm %s: %s'
+                                      % (client_scope.name, realm, str(e)))
+        except Exception as e:
+            self.module.fail_json(msg='Could not obtain client scope %s for realm %s: %s'
+                                      % (client_scope.name, realm, str(e)))
+        finally:
+            return postResponse       
+        
+
 """
     {
       "id": "4657a25e-9db1-40b5-a1f2-c3634f79c3f2",
@@ -3517,6 +3575,7 @@ class ClientScope():
         for mapper in self.protocolMappers:
             mappers.append(mapper.getRepresentation())
         rep['protocolMappers'] = mappers
+        return rep
 
     def fromRepresentation(self, rep={}):
         for key in rep.keys():
@@ -3627,6 +3686,7 @@ class ProtocolMapper():
             rep['protocolMapper'] = self.protocolMapper
         rep['consentRequired'] = self.consentRequired
         rep['config'] = self.config
+        return rep
 
     def fromRepresentation(self, rep={}):
         for key in rep.keys():

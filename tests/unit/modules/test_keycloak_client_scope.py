@@ -52,11 +52,22 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
             ]
         }
     ]
+    kcparams = {
+        "auth_keycloak_url": "http://localhost:18081/auth",
+        "auth_username": "admin",
+        "auth_password": "admin",
+        "realm": "master"
+    }
+    meta_params = {
+        "state": "present",
+        "force": False
+    }
     excudes = ["auth_keycloak_url","auth_username","auth_password","state","force","realm","composites","_ansible_keep_remote_files","_ansible_remote_tmp"]
     kc = None
     baseurl = "http://localhost:18081"
     def setUp(self):
         super(KeycloakClientScopeTestCase, self).setUp()
+        self.module = keycloak_client_scope
         username = "admin"
         password = "admin"
         self.clientScopesUrl = "{baseurl}/auth/admin/realms/master/client-scopes"
@@ -91,7 +102,9 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
                         data=data)
                 print("Status code: {0}".format(str(postResponse.status_code)))
     def tearDown(self):
-        for testClientScope in self.testClientScopes:
+        allClientScopes = self.testClientScopes.copy()
+        allClientScopes.append(self.testClientScope.copy())
+        for testClientScope in allClientScopes:
             getResponse = requests.get(
                 self.clientScopesUrl.format(baseurl=self.baseurl),
                 headers=self.headers)
@@ -111,5 +124,11 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
 
 
     def test_create_new_client_scope(self):
-        print("Test")
-        self.assertEqual("test", "test", "test n'est pas test")
+        toCreate = self.testClientScope.copy()
+        toCreate.update(self.kcparams.copy())
+        toCreate.update(self.meta_params.copy())
+        toCreate["state"] = "present"
+        set_module_args(toCreate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        self.assertTrue(results.exception.args[0]['changed'])

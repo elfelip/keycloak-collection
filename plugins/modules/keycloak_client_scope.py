@@ -136,8 +136,14 @@ from ansible.module_utils.basic import AnsibleModule
 
 
 def main():
+    client_scope = ClientScope()
     argument_spec = keycloak_argument_spec()
-    meta_args = ClientScope.argument_spec()
+    argument_spec.update(client_scope.argument_spec())
+    meta_args = dict(
+        realm=dict(type="str", default="master"),
+        state=dict(default='present', choices=['present', 'absent']),
+        force=dict(type='bool', default=False),
+    )
     argument_spec.update(meta_args)
 
     module = AnsibleModule(argument_spec=argument_spec,
@@ -159,11 +165,20 @@ def main():
     except KeycloakError as e:
         module.fail_json(msg=str(e))
 
+    realm = module.params.get('realm')
     kc = KeycloakAPI(module, connection_header)
 
     client_scope = ClientScope(module_params=module.params)
     changed = False
-
+    found_client_scopes = kc.search_client_scope_by_name(client_scope.name, realm=realm)
+    if len(found_client_scopes) == 0:  # Scope does not already exists
+        response = kc.create_client_scope(client_scope=client_scope, realm=realm)
+        if response.code == 201:
+            result['client_scope'] = response.read()
+            changed = True
+    result['changed'] = changed
+    module.exit_json(**result)
+    """
     # Search the role on Keycloak server.
     roleRepresentation = kc.search_realm_role_by_name(name=newRoleRepresentation["name"], realm=realm)
     if roleRepresentation == {}:  # If role does not exists
@@ -212,7 +227,7 @@ def main():
             result["msg"] = "Realm role %s is deleted in realm %s" % (newRoleRepresentation["name"], realm)
     result['changed'] = changed
     module.exit_json(**result)
-
+"""
 
 if __name__ == '__main__':
     main()

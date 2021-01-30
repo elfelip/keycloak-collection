@@ -237,7 +237,7 @@ class ClientScopeRepresentationTestCase(TestCase):
       ]
     }
 
-    def TestGetClientScopeFromRepresentation(self):
+    def test_GetClientScopeFromRepresentation(self):
         scope = ClientScope(rep=self.clientScopeTest)
         self.assertEqual(scope.id, self.clientScopeTest['id'], "Incorrect client scope id. {0} != {1}".format(scope.id, self.clientScopeTest['id']))
         self.assertEqual(scope.name, self.clientScopeTest['name'], "Incorrect client scope name. {0} != {1}".format(scope.name, self.clientScopeTest['name']))
@@ -245,7 +245,12 @@ class ClientScopeRepresentationTestCase(TestCase):
         self.assertEqual(scope.protocol, self.clientScopeTest['protocol'], "Incorrect client scope protocol. {0} != {1}".format(scope.protocol, self.clientScopeTest['protocol']))
         self.assertEqual(scope.attributes, self.clientScopeTest['attributes'], "Incorrect client scope attributes. {0} != {1}".format(str(scope.attributes), str(self.clientScopeTest['attributes'])))
 
-    def TestGetProtocolMapperFromRepresentation(self):
+    def test_GetClientScopeRepresentation(self):
+        scope = ClientScope(rep=self.clientScopeTest)
+        rep = scope.getRepresentation()
+        self.assertEquals(rep, self.clientScopeTest, "{} is not {}".format(str(rep), str(self.clientScopeTest)))
+
+    def test_GetProtocolMapperFromRepresentation(self):
         mapper = ProtocolMapper(rep=self.clientScopeTest['protocolMappers'][0])
         self.assertEqual(mapper.id, self.clientScopeTest['protocolMappers'][0]['id'], "Incorrect protocol mapper id. {0} != {1}".format(mapper.id, self.clientScopeTest['protocolMappers'][0]['id']))
         self.assertEqual(mapper.name, self.clientScopeTest['protocolMappers'][0]['name'], "Incorrect protocol mapper name. {0} != {1}".format(mapper.name, self.clientScopeTest['protocolMappers'][0]['name']))
@@ -254,7 +259,7 @@ class ClientScopeRepresentationTestCase(TestCase):
         self.assertEqual(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired'], "Incorrect protocol mapper consentRequired. {0} != {1}".format(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired']))
         self.assertEqual(mapper.config, self.clientScopeTest['protocolMappers'][0]['config'], "Incorrect protocol mapper config. {0} != {1}".format(str(mapper.config), str(self.clientScopeTest['protocolMappers'][0]['config'])))
 
-    def TestProtocolMapperFromModuleParams(self):
+    def test_ProtocolMapperFromModuleParams(self):
         module_param = {}
         mapper_param = self.clientScopeTest['protocolMappers'][0]
         module_param['name'] = mapper_param.get('name')
