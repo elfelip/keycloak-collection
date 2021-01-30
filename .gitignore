@@ -5,3 +5,5 @@ tests/output
 .vscode/
 **/nosetests*.xml
 collections
+*.swp
+**/__pycache__/
