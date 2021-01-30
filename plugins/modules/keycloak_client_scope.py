@@ -174,7 +174,7 @@ def main():
     if len(found_client_scopes) == 0:  # Scope does not already exists
         response = kc.create_client_scope(client_scope=client_scope, realm=realm)
         if response.code == 201:
-            result['client_scope'] = response.read()
+            result['client_scope'] = kc.search_client_scope_by_name(name=client_scope.name)[0].getRepresentation()
             changed = True
     result['changed'] = changed
     module.exit_json(**result)

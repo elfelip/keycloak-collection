@@ -259,6 +259,25 @@ class ClientScopeRepresentationTestCase(TestCase):
         self.assertEqual(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired'], "Incorrect protocol mapper consentRequired. {0} != {1}".format(mapper.consentRequired, self.clientScopeTest['protocolMappers'][0]['consentRequired']))
         self.assertEqual(mapper.config, self.clientScopeTest['protocolMappers'][0]['config'], "Incorrect protocol mapper config. {0} != {1}".format(str(mapper.config), str(self.clientScopeTest['protocolMappers'][0]['config'])))
 
+    def test_CompareSameClientScopeChangedIsFalse(self):
+        scope = ClientScope(rep=self.clientScopeTest)
+        scope_2 = ClientScope(rep=self.clientScopeTest)
+        self.assertFalse(scope.changed(scope_2), "Scope changed but not supposed to")
+
+    def test_CompareSameClientScopeWithoutIdsChangedIsFalse(self):
+        scope = ClientScope(rep=self.clientScopeTest)
+        scope.id = None
+        scope.protocolMappers[0].id = None
+        scope_2 = ClientScope(rep=self.clientScopeTest)
+        self.assertFalse(scope.changed(scope_2), "Scope changed but not supposed to")
+
+    def test_CompareDifferentClientScopesChangedIsTrue(self):
+        scope = ClientScope(rep=self.clientScopeTest)
+        scope.name = "test2"
+        scope.protocolMappers[0].name = "test2"
+        scope_2 = ClientScope(rep=self.clientScopeTest)
+        self.assertTrue(scope.changed(scope_2), "Scope changed but not supposed to")
+
     def test_ProtocolMapperFromModuleParams(self):
         module_param = {}
         mapper_param = self.clientScopeTest['protocolMappers'][0]

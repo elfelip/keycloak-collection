@@ -1,4 +1,4 @@
-from plugins.module_utils.keycloak import isDictEquals, get_token
+from plugins.module_utils.keycloak import ClientScope, isDictEquals, get_token
 from plugins.modules import keycloak_client_scope
 from tests.unit.module_utils.utils import AnsibleExitJson, AnsibleFailJson, ModuleTestCase, set_module_args
 import requests
@@ -132,3 +132,11 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
         with self.assertRaises(AnsibleExitJson) as results:
             self.module.main()
         self.assertTrue(results.exception.args[0]['changed'])
+        scope = ClientScope(rep=self.testClientScope)
+        created_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertFalse(
+            scope.changed(created_scope),
+            "asked: {}, created: {}".format(
+                str(scope.getRepresentation()),
+                str(created_scope.getRepresentation())))
+

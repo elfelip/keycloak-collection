@@ -3593,6 +3593,10 @@ class ClientScope():
                 for mapper in rep[key]:
                     self.protocolMappers.append(ProtocolMapper(rep=mapper))  
 
+    def changed(self, client_scope):
+        self_rep = self.getRepresentation()
+        scope_rep = client_scope.getRepresentation()
+        return not isDictEquals(self_rep, scope_rep)
 """
       "protocolMappers": [
         {
