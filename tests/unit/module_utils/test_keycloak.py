@@ -245,7 +245,44 @@ class ClientScopeRepresentationTestCase(TestCase):
         self.assertEqual(scope.protocol, self.clientScopeTest['protocol'], "Incorrect client scope protocol. {0} != {1}".format(scope.protocol, self.clientScopeTest['protocol']))
         self.assertEqual(scope.attributes, self.clientScopeTest['attributes'], "Incorrect client scope attributes. {0} != {1}".format(str(scope.attributes), str(self.clientScopeTest['attributes'])))
 
-    def test_GetClientScopeRepresentation(self):
+    def test_NewClientScopeFromModule(self):
+        module_params = {
+            'auth_keycloak_url': 'http://localhost:8080/auth',
+            'auth_sername': 'admin',
+            'auth_password': 'password',
+            'auth_realm': 'master',
+            'realm': 'master',
+            'name': 'testclientscope',
+            'description': 'Client scope',
+            'protocol': 'openid-connect',
+            'attributes': {
+                'include.in.token.scope': 'true',
+                'display.on.consent.screen': 'true'
+            },
+            'protocolMappers': [
+                {
+                    'name': 'test-audience',
+                    'protocol': 'openid-connect',
+                    'protocolMapper': 'oidc-audience-mapper',
+                    'consentRequired': 'false',
+                    'config': { 
+                        'included.client.audience': 'admin-cli',
+                        'id.token.claim': 'true'
+                    },
+                    'access.token.claim': 'true'
+                }
+            ],
+            'state': 'present'
+        }
+        
+        scope = ClientScope(module_params=module_params)
+        self.assertEqual(scope.name, module_params['name'], "Incorrect client scope name. {0} != {1}".format(scope.name, module_params['name']))
+        self.assertEqual(scope.description, module_params['description'], "Incorrect client scope description. {0} != {1}".format(scope.description, module_params['description']))
+        self.assertEqual(scope.protocol, module_params['protocol'], "Incorrect client scope protocol. {0} != {1}".format(scope.protocol, module_params['protocol']))
+        self.assertEqual(scope.attributes, module_params['attributes'], "Incorrect client scope attributes. {0} != {1}".format(str(scope.attributes), str(module_params['attributes'])))
+        self.assertTrue(isDictEquals(scope.protocolMappers[0].getRepresentation(), module_params['protocolMappers'][0]), "Incorrect client scope protocolMappers. {0} != {1}".format(str(scope.protocolMappers[0].getRepresentation()), str(module_params['protocolMappers'][0])))
+
+    def test_NewClientScopeFromRepresentation(self):
         scope = ClientScope(rep=self.clientScopeTest)
         rep = scope.getRepresentation()
         self.assertEquals(rep, self.clientScopeTest, "{} is not {}".format(str(rep), str(self.clientScopeTest)))
@@ -265,10 +302,10 @@ class ClientScopeRepresentationTestCase(TestCase):
         self.assertFalse(scope.changed(scope_2), "Scope changed but not supposed to")
 
     def test_CompareSameClientScopeWithoutIdsChangedIsFalse(self):
-        scope = ClientScope(rep=self.clientScopeTest)
-        scope.id = None
-        scope.protocolMappers[0].id = None
-        scope_2 = ClientScope(rep=self.clientScopeTest)
+        scoperep = {'name': 'newclientscope', 'description': 'New Client Scope', 'protocol': 'openid-connect', 'attributes': {'include.in.token.scope': 'true', 'display.on.consent.screen': 'true'}, 'protocolMappers': [{'name': 'new-mapper-audience', 'protocol': 'openid-connect', 'protocolMapper': 'oidc-audience-mapper', 'consentRequired': False, 'config': {'included.client.audience': 'test', 'id.token.claim': 'true', 'access.token.claim': 'true'}}]}
+        scope = ClientScope(rep=scoperep)
+        scoperep = {'id': '7e566f2c-6485-4a30-89f3-45ebb82e06eb', 'name': 'newclientscope', 'description': 'New Client Scope', 'protocol': 'openid-connect', 'attributes': {'include.in.token.scope': 'true', 'display.on.consent.screen': 'true'}, 'protocolMappers': [{'id': 'c0637c21-c2ab-4abc-941d-63fbd71e8527', 'name': 'new-mapper-audience', 'protocol': 'openid-connect', 'protocolMapper': 'oidc-audience-mapper', 'consentRequired': False, 'config': {'included.client.audience': 'test', 'id.token.claim': 'true', 'access.token.claim': 'true', 'userinfo.token.claim': 'true'}}]}
+        scope_2 = ClientScope(rep=scoperep)
         self.assertFalse(scope.changed(scope_2), "Scope changed but not supposed to")
 
     def test_CompareDifferentClientScopesChangedIsTrue(self):

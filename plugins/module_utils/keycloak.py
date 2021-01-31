@@ -3447,7 +3447,16 @@ class KeycloakAPI(object):
             scopeFound = False
             for scope in clientscopesrep:
                 if scope['name'] == name:
-                    client_scopes.append(ClientScope(rep=scope))
+                    found_clientscopesrep = json.load(
+                        open_url(
+                            URL_CLIENT_SCOPE.format(
+                                url=self.baseurl,
+                                realm=realm,
+                                id=scope['id']),
+                            method='GET',
+                            headers=self.restheaders,
+                            validate_certs=self.validate_certs))
+                    client_scopes.append(ClientScope(rep=found_clientscopesrep))
         except HTTPError as e:
             if e.code == 404:
                 return None
@@ -3530,7 +3539,7 @@ class ClientScope():
             self.fromRepresentation(rep=rep)
         elif module_params is not None:
             self.name = module_params.get('name') if 'name' in module_params else None
-            self.description = module_params.get('description') if description in module_params else None
+            self.description = module_params.get('description') if 'description' in module_params else None
             self.protocol = module_params.get('protocol') if 'protocol' in module_params else 'openid-connect'
             self.attributes = module_params.get('attributes') if 'attributes' in module_params else {}
             self.protocolMappers = []
