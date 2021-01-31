@@ -885,7 +885,7 @@ def main():
                            required_one_of=([['client_id', 'id']]))
 
     result = dict(changed=False, msg='', diff={}, proposed={}, existing={}, end_state={}, clientSecret='')
-
+    connection_header = {}
     # Obtain access token, initialize API
     try:
         connection_header = get_token(

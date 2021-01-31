@@ -20,7 +20,7 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
           "protocolMapper": "oidc-audience-mapper",
           "consentRequired": False,
           "config": {
-            "included.client.audience": "test",
+            "included.client.audience": "admin-cli",
             "id.token.claim": "true",
             "access.token.claim": "true"
           }
@@ -44,7 +44,7 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
                     "protocolMapper": "oidc-audience-mapper",
                     "consentRequired": False,
                     "config": {
-                        "included.client.audience": "test",
+                        "included.client.audience": "admin-cli",
                         "id.token.claim": "true",
                         "access.token.claim": "true"
                     }
@@ -112,7 +112,7 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
             scopeFound = False
             scope = {}
             for scope in scopes:
-                if scope['name'] == testClientScope['name']:
+                if 'name' in scope and 'name' in testClientScope and scope['name'] == testClientScope['name']:
                     scopeFound = True
                     break
             if scopeFound:
@@ -139,4 +139,87 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
             "asked: {}, created: {}".format(
                 str(scope.getRepresentation()),
                 str(created_scope.getRepresentation())))
+
+    def test_update_client_scope_description(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        toUpdate['description'] = 'Changed description'
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        self.assertTrue(results.exception.args[0]['changed'])
+        scope = ClientScope(rep=self.testClientScopes[0])
+        updated_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertEquals(
+            updated_scope.description,
+            toUpdate['description'],
+            'Scope has not been updated: asked: {}, updated {}'.format(
+                updated_scope.description,
+                toUpdate['description']
+            )
+        )
+            
+        self.assertTrue(
+            scope.changed(updated_scope),
+            "Client scope has not change. asked: {}, created: {}".format(
+                str(scope.getRepresentation()),
+                str(updated_scope.getRepresentation())))
+
+    def test_update_client_scope_without_change(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        self.assertFalse(results.exception.args[0]['changed'])
+
+    def test_update_client_scope_protocol_mapper_included_client_audience(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        toUpdate['protocolMappers'][0]['config']['included.client.audience'] = 'account'
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        self.assertTrue(results.exception.args[0]['changed'])
+        scope = ClientScope(rep=self.testClientScopes[0])
+        updated_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertEquals(
+            updated_scope.protocolMappers[0].config['included.client.audience'], 
+            'account',
+            'Included client audience prodocol mapper config has not been updated: {}'.format(
+                updated_scope.protocolMappers[0].config['included.client.audience']))
+        self.assertFalse(
+            scope.changed(updated_scope),
+            "Client scope has not change. asked: {}, created: {}".format(
+                str(scope.getRepresentation()),
+                str(updated_scope.getRepresentation())))
+
+
+    def test_update_client_scope_protocol_mapper_id_token_claim(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        toUpdate['protocolMappers'][0]['config']['id.token.claim'] = 'false'
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        self.assertTrue(results.exception.args[0]['changed'])
+        scope = ClientScope(rep=self.testClientScopes[0])
+        updated_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertEquals(
+            updated_scope.protocolMappers[0].config['id.token.claim'], 
+            'false',
+            'Id token claim prodocol mapper config has not been updated: {}'.format(updated_scope.protocolMappers[0].config['id.token.claim']))
+        self.assertFalse(
+            scope.changed(updated_scope),
+            "Client scope has not change. asked: {}, created: {}".format(
+                str(scope.getRepresentation()),
+                str(updated_scope.getRepresentation())))
 

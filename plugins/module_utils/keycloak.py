@@ -108,8 +108,10 @@ URL_REALM_ROLE_COMPOSITES_CLIENT = URL_REALM_ROLE_COMPOSITES + "/clients/{client
 
 URL_CLIENT_SCOPES = "{url}/admin/realms/{realm}/client-scopes"
 URL_CLIENT_SCOPE = URL_CLIENT_SCOPES + "/{id}"
-URL_CLIENT_SCOPE_PROTOCOL_MAPPERS = URL_CLIENT_SCOPE + "/protocol-mappers"
-URL_CLIENT_SCOPE_PROTOCOL_MAPPERS_ADD_MODELS = URL_CLIENT_SCOPE_PROTOCOL_MAPPERS + "/add-models"
+URL_CLIENT_SCOPE_PROTOCOL_MAPPERS_BASE = URL_CLIENT_SCOPE + "/protocol-mappers"
+URL_CLIENT_SCOPE_PROTOCOL_MAPPERS_ADD_MODELS = URL_CLIENT_SCOPE_PROTOCOL_MAPPERS_BASE + "/add-models"
+URL_CLIENT_SCOPE_PROTOCOL_MAPPERS = URL_CLIENT_SCOPE_PROTOCOL_MAPPERS_BASE + '/models'
+URL_CLIENT_SCOPE_PROTOCOL_MAPPER = URL_CLIENT_SCOPE_PROTOCOL_MAPPERS + '/{mapperId}'
 
 def keycloak_argument_spec():
     """
@@ -1224,6 +1226,7 @@ class KeycloakAPI(object):
                                         newComposite['clientRole'] = False
                                         break
                     clientRoleFound = False
+                    clientRole = {}
                     clientRoles = self.get_client_roles(client_id=id_client, realm=realm)
                     if len(clientRoles) > 0:
                         # Check if role to be created already exist for the client
@@ -1307,6 +1310,7 @@ class KeycloakAPI(object):
         """
         try:
             changed = False
+            clientMapper = {}
             if camel('protocol_mappers') in clientRepresentation and clientRepresentation[camel('protocol_mappers')] is not None:
                 newClientProtocolMappers = clientRepresentation[camel('protocol_mappers')]
                 # Get existing mappers from the client
@@ -1435,6 +1439,7 @@ class KeycloakAPI(object):
                                 clientSvcBaseUrl + '?clientId=' + clientIdOfClientRole,
                                 method='GET',
                                 headers=self.restheaders))
+                        clientId = None
                         if len(clients) > 0 and "id" in clients[0]:
                             clientId = clients[0]["id"]
                             # Get the client roles
@@ -1633,6 +1638,8 @@ class KeycloakAPI(object):
         """
         try:
             changed = False
+            existingExecution = {}
+            existingExecutionIndex = 0
             if "authenticationExecutions" in config:
                 for newExecutionIndex, newExecution in enumerate(config["authenticationExecutions"], start=0):
                     # Get existing executions on the Keycloak server for this alias
@@ -2166,6 +2173,7 @@ class KeycloakAPI(object):
         """
         changed = False
         try:
+            mapper = {}
             # Get idp's mappers list
             mappers_url = URL_IDP_MAPPERS.format(
                 url=self.baseurl,
@@ -3470,6 +3478,39 @@ class KeycloakAPI(object):
             self.module.fail_json(msg='Could not obtain client scope %s for realm %s: %s'
                                       % (name, realm, str(e)))        
         return client_scopes
+
+    def get_client_scope_by_id(self, id, realm='master'):
+        """
+        Get client scope by id
+        :param id: id of the scope to get
+        :param realm: Realm
+        :return: client scope object, None otherwise.
+        """
+        client_scope = None
+        try:
+            getResponse = open_url(
+                    URL_CLIENT_SCOPE.format(
+                        url=self.baseurl,
+                        realm=realm,
+                        id=id),
+                    method='GET',
+                    headers=self.restheaders,
+                    validate_certs=self.validate_certs)
+            client_scope = ClientScope(rep=json.load(getResponse)) if getResponse.code == 200 else None
+        except HTTPError as e:
+            if e.code == 404:
+                return None
+            else:
+                self.module.fail_json(msg='Could not get client scope %s for realm %s: %s'
+                                      % (id, realm, str(e)))
+        except ValueError as e:
+            self.module.fail_json(msg='API returned incorrect JSON when trying to get client scope %s for realm %s: %s'
+                                      % (id, realm, str(e)))
+        except Exception as e:
+            self.module.fail_json(msg='Could not get client scope %s for realm %s: %s'
+                                      % (id, realm, str(e)))        
+        return client_scope
+
     def create_client_scope(self, client_scope, realm='master'):
         postResponse = None
         try:
@@ -3490,14 +3531,94 @@ class KeycloakAPI(object):
                 self.module.fail_json(msg='Could not create client scope %s for realm %s: %s'
                                       % (client_scope.name, realm, str(e)))
         except ValueError as e:
-            self.module.fail_json(msg='API returned incorrect JSON when trying to obtain client scope %s for realm %s: %s'
+            self.module.fail_json(msg='API returned incorrect JSON when trying to create client scope %s for realm %s: %s'
                                       % (client_scope.name, realm, str(e)))
         except Exception as e:
-            self.module.fail_json(msg='Could not obtain client scope %s for realm %s: %s'
+            self.module.fail_json(msg='Could not create client scope %s for realm %s: %s'
                                       % (client_scope.name, realm, str(e)))
         finally:
             return postResponse       
         
+    def update_client_scope(self, client_scope, realm='master'):
+        putResponse = None
+        try:
+            existing_client_scopes = self.search_client_scope_by_name(name=client_scope.name, realm=realm)
+            existing_client_scope = existing_client_scopes[0]
+            client_scope.resolve_ids(existing_client_scope)
+            rep = client_scope.getRepresentation()
+            data=json.dumps(rep)
+            putResponse = open_url(
+                URL_CLIENT_SCOPE.format(
+                    url=self.baseurl,
+                    realm=realm,
+                    id=client_scope.id),
+                method='PUT',
+                headers=self.restheaders,
+                data=data,
+                validate_certs=self.validate_certs)
+
+            for protocol_mapper in client_scope.protocolMappers:
+                protocol_mapper_exist = False
+                data = json.dumps(protocol_mapper.getRepresentation())
+                for existing_protocol_mapper in existing_client_scope.protocolMappers:
+                    if protocol_mapper.id is not None and existing_protocol_mapper.id == protocol_mapper.id:
+                        protocol_mapper_exist = True
+                        break
+                if protocol_mapper_exist and protocol_mapper.state == 'present':
+                    response = open_url(
+                        URL_CLIENT_SCOPE_PROTOCOL_MAPPER.format(
+                            url=self.baseurl,
+                            realm=realm,
+                            id=client_scope.id,
+                            mapperId=protocol_mapper.id
+                        ),
+                        method='PUT',
+                        headers=self.restheaders,
+                        data=data,
+                        validate_certs=self.validate_certs
+                    )
+                elif protocol_mapper.state == 'present':
+                    response = open_url(
+                        URL_CLIENT_SCOPE_PROTOCOL_MAPPERS.format(
+                            url=self.baseurl,
+                            realm=realm,
+                            id=client_scope.id
+                        ),
+                        method='POST',
+                        headers=self.restheaders,
+                        data=data,
+                        validate_certs=self.validate_certs
+                    )
+                elif protocol_mapper.state == 'absent':
+                    response = open_url(
+                        URL_CLIENT_SCOPE_PROTOCOL_MAPPER.format(
+                            url=self.baseurl,
+                            realm=realm,
+                            id=client_scope.id,
+                            mapperId=protocol_mapper.id
+                        ),
+                        method='DELETE',
+                        headers=self.restheaders,
+                        validate_certs=self.validate_certs
+                    )
+
+
+        except HTTPError as e:
+            if e.code == 404:
+                return None
+            else:
+                self.module.fail_json(msg='Could not update client scope %s for realm %s: %s'
+                                      % (client_scope.name, realm, str(e)))
+        except ValueError as e:
+            self.module.fail_json(msg='API returned incorrect JSON when trying to update client scope %s for realm %s: %s'
+                                      % (client_scope.name, realm, str(e)))
+        except Exception as e:
+            self.module.fail_json(msg='Could not update client scope %s for realm %s: %s'
+                                      % (client_scope.name, realm, str(e)))
+        finally:
+            return putResponse
+
+    
 
 """
     {
@@ -3533,6 +3654,7 @@ class ClientScope():
     attributes = {}
     protocolMappers = []
     protocol_choices = ["openid-connect", "saml" ]
+    state = 'present'
 
     def __init__(self, id=None, name=None, description=None, protocol="openid-connect", attributes={}, protocolMappers=[], rep=None, module_params=None):
         if rep is not None:
@@ -3542,6 +3664,7 @@ class ClientScope():
             self.description = module_params.get('description') if 'description' in module_params else None
             self.protocol = module_params.get('protocol') if 'protocol' in module_params else 'openid-connect'
             self.attributes = module_params.get('attributes') if 'attributes' in module_params else {}
+            self.state = module_params.get('state') if 'state' in module_params else 'present'
             self.protocolMappers = []
             if 'protocolMappers' in module_params:
                 for mapper_param in module_params.get('protocolMappers'):
@@ -3567,7 +3690,8 @@ class ClientScope():
             description=dict(type='str', required=False),
             protocol=dict(type='str', default='openid-connect', choices=self.protocol_choices),
             attributes=dict(type='dict', default={}),
-            protocolMappers=dict(type='list', default=[], options=ProtocolMapper().argument_spec())
+            protocolMappers=dict(type='list', default=[], options=ProtocolMapper().argument_spec()),
+            state=dict(type='str', choices=['present','absent'], default='present')
         )    
 
     def getRepresentation(self):
@@ -3607,6 +3731,13 @@ class ClientScope():
         self_rep = self.getRepresentation()
         scope_rep = client_scope.getRepresentation()
         return not isDictEquals(self_rep, scope_rep)
+
+    def resolve_ids(self, client_scope_with_ids):
+        self.id = client_scope_with_ids.id
+        for mapper in self.protocolMappers:
+            for mapper_with_id in client_scope_with_ids.protocolMappers:
+                if mapper_with_id.name == mapper.name:
+                    mapper.id = mapper_with_id.id
 """
       "protocolMappers": [
         {
@@ -3629,6 +3760,7 @@ class ProtocolMapper():
     protocolMapper = "oidc-audience-mapper"
     consentRequired = False
     config = {}
+    state = 'present'
     protocol_choices = ["openid-connect", "saml" ]
     protocolMapper_choices = [
         "oidc-audience-mapper",
@@ -3668,6 +3800,8 @@ class ProtocolMapper():
             self.protocolMapper = module_params.get('protocolMapper') if 'protocolMapper' in module_params else 'oidc-audience-mapper'
             self.consentRequired = module_params.get('consentRequired') if 'consentRequired' in module_params else False
             self.config = module_params.get('config') if 'config' in module_params else {}
+            self.state = module_params.get('state') if 'state' in module_params else 'present'
+
         else:
             self.id = id
             self.name = name
@@ -3687,7 +3821,8 @@ class ProtocolMapper():
             protocol=dict(type='str', default='openid-connect', choices=self.protocol_choices),
             protocolMapper=dict(type='string', default="protocolMapper", choices=self.protocolMapper_choices),
             consentRequired=dict(type='bool', default=False),
-            config=dict(type='dict', default={})
+            config=dict(type='dict', default={}),
+            state=dict(type='str', choices=['present','absent'], default='present')
         )    
     def getRepresentation(self):
         rep = {}

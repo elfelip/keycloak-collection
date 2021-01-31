@@ -64,4 +64,10 @@ options:
             - Configuration parameter for the mapper.
         type: dict
         required: false
+    state:
+        description:
+            - Control if the client scope must exists or not
+        choices: [ "present", "absent" ]
+        default: present
+        type: str
 '''
