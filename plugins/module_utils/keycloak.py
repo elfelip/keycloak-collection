@@ -3590,6 +3590,7 @@ class ClientScope():
             elif key == 'attributes':
                 self.attributes = rep[key]
             elif key == 'protocolMappers':
+                self.protocolMappers = []
                 for mapper in rep[key]:
                     self.protocolMappers.append(ProtocolMapper(rep=mapper))  
 
