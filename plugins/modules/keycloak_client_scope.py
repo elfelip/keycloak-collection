@@ -176,11 +176,13 @@ def main():
             result['client_scope'] = kc.search_client_scope_by_name(name=client_scope.name)[0].getRepresentation()
             changed = True
     else:
-        if client_scope.changed(client_scope=found_client_scopes[0]):
+        if client_scope.need_change(client_scope=found_client_scopes[0]):
             response = kc.update_client_scope(client_scope=client_scope, realm=realm)
             if response is not None and response.code == 204:
-                result['client_scope'] = kc.get_client_scope_by_id(id=found_client_scopes[0].id).getRepresentation()
                 changed = True
+
+        result['client_scope'] = kc.get_client_scope_by_id(id=found_client_scopes[0].id).getRepresentation()
+
     result['changed'] = changed
     module.exit_json(**result)
     """

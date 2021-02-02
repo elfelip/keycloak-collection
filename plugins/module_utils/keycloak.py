@@ -3727,8 +3727,16 @@ class ClientScope():
                 for mapper in rep[key]:
                     self.protocolMappers.append(ProtocolMapper(rep=mapper))  
 
-    def changed(self, client_scope):
-        self_rep = self.getRepresentation()
+    def need_change(self, client_scope):
+        my_self = ClientScope(rep=self.getRepresentation)
+        for mapper in my_self.protocolMappers:
+            if mapper.state == 'absent':
+                my_self.protocolMappers.remove(mapper)
+        self_rep = my_self.getRepresentation()
+        
+        for mapper in client_scope.protocolMappers:
+            if mapper.state == 'absent':
+                client_scope.protocolMappers.remove(mapper)
         scope_rep = client_scope.getRepresentation()
         return not isDictEquals(self_rep, scope_rep)
 

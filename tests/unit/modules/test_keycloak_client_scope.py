@@ -223,3 +223,40 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
                 str(scope.getRepresentation()),
                 str(updated_scope.getRepresentation())))
 
+    def test_update_client_scope_add_protocol_mapper(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        newMapper = self.testClientScopes[0]['protocolMappers'][0].copy()
+        newMapper['name'] = 'added-mapper-audience'
+        newMapper['config']['included.client.audience'] = 'account'
+        newMapper['config']['id.token.claim'] = 'false'
+        toUpdate['protocolMappers'].append(newMapper)
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        scope = ClientScope(rep=toUpdate)
+        updated_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertTrue(results.exception.args[0]['changed'])
+        self.assertEquals(
+            len(updated_scope.protocolMappers), 
+            2,
+            'Protocol Mapper not added to client scope: {}'.format(str(len(updated_scope.protocolMappers))))
+
+    def test_update_client_scope_delete_protocol_mapper(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        toUpdate['protocolMappers'][0]['state'] = 'absent'
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        scope = ClientScope(rep=toUpdate)
+        updated_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertTrue(results.exception.args[0]['changed'])
+        self.assertEquals(
+            len(updated_scope.protocolMappers), 
+            0,
+            'Protocol Mapper not deleted from client scope: {}'.format(str(len(updated_scope.protocolMappers))))

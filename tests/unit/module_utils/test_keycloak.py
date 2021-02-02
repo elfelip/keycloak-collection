@@ -299,21 +299,21 @@ class ClientScopeRepresentationTestCase(TestCase):
     def test_CompareSameClientScopeChangedIsFalse(self):
         scope = ClientScope(rep=self.clientScopeTest)
         scope_2 = ClientScope(rep=self.clientScopeTest)
-        self.assertFalse(scope.changed(scope_2), "Scope changed but not supposed to")
+        self.assertFalse(scope.need_change(scope_2), "Scope changed but not supposed to")
 
     def test_CompareSameClientScopeWithoutIdsChangedIsFalse(self):
         scoperep = {'name': 'newclientscope', 'description': 'New Client Scope', 'protocol': 'openid-connect', 'attributes': {'include.in.token.scope': 'true', 'display.on.consent.screen': 'true'}, 'protocolMappers': [{'name': 'new-mapper-audience', 'protocol': 'openid-connect', 'protocolMapper': 'oidc-audience-mapper', 'consentRequired': False, 'config': {'included.client.audience': 'test', 'id.token.claim': 'true', 'access.token.claim': 'true'}}]}
         scope = ClientScope(rep=scoperep)
         scoperep = {'id': '7e566f2c-6485-4a30-89f3-45ebb82e06eb', 'name': 'newclientscope', 'description': 'New Client Scope', 'protocol': 'openid-connect', 'attributes': {'include.in.token.scope': 'true', 'display.on.consent.screen': 'true'}, 'protocolMappers': [{'id': 'c0637c21-c2ab-4abc-941d-63fbd71e8527', 'name': 'new-mapper-audience', 'protocol': 'openid-connect', 'protocolMapper': 'oidc-audience-mapper', 'consentRequired': False, 'config': {'included.client.audience': 'test', 'id.token.claim': 'true', 'access.token.claim': 'true', 'userinfo.token.claim': 'true'}}]}
         scope_2 = ClientScope(rep=scoperep)
-        self.assertFalse(scope.changed(scope_2), "Scope changed but not supposed to")
+        self.assertFalse(scope.need_change(scope_2), "Scope changed but not supposed to")
 
     def test_CompareDifferentClientScopesChangedIsTrue(self):
         scope = ClientScope(rep=self.clientScopeTest)
         scope.name = "test2"
         scope.protocolMappers[0].name = "test2"
         scope_2 = ClientScope(rep=self.clientScopeTest)
-        self.assertTrue(scope.changed(scope_2), "Scope changed but not supposed to")
+        self.assertTrue(scope.need_change(scope_2), "Scope changed but not supposed to")
 
     def test_ProtocolMapperFromModuleParams(self):
         module_param = {}
