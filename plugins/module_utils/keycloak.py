@@ -3556,7 +3556,26 @@ class KeycloakAPI(object):
                 headers=self.restheaders,
                 data=data,
                 validate_certs=self.validate_certs)
-
+            # Look if existing protocol mappers containe mappers which does not exist in the new mappers
+            for existing_protocol_mapper in existing_client_scope.protocolMappers:
+                protocol_mapper_exist = False
+                for protocol_mapper in client_scope.protocolMappers:
+                    if protocol_mapper.name == existing_protocol_mapper.name:
+                        protocol_mapper_exist = True
+                        break
+                if not protocol_mapper_exist:
+                    # Delete protocol mapper
+                    response = open_url(
+                        URL_CLIENT_SCOPE_PROTOCOL_MAPPER.format(
+                            url=self.baseurl,
+                            realm=realm,
+                            id=client_scope.id,
+                            mapperId=existing_protocol_mapper.id
+                        ),
+                        method='DELETE',
+                        headers=self.restheaders,
+                        validate_certs=self.validate_certs
+                    )
             for protocol_mapper in client_scope.protocolMappers:
                 protocol_mapper_exist = False
                 data = json.dumps(protocol_mapper.getRepresentation())
@@ -3725,10 +3744,23 @@ class ClientScope():
             elif key == 'protocolMappers':
                 self.protocolMappers = []
                 for mapper in rep[key]:
-                    self.protocolMappers.append(ProtocolMapper(rep=mapper))  
+                    self.protocolMappers.append(ProtocolMapper(rep=mapper))
+            elif key == 'state':
+                self.state = rep[key]
+    def copy(self):
+        client_scope_copy = ClientScope(
+            name=self.name,
+            description=self.description,
+            protocol=self.protocol,
+            attributes=self.attributes.copy())
+        client_scope_copy.protocolMappers = []
+        for mapper in self.protocolMappers:
+            client_scope_copy.protocolMappers.append(mapper.copy())
+        client_scope_copy.state = self.state
+        return client_scope_copy
 
     def need_change(self, client_scope):
-        my_self = ClientScope(rep=self.getRepresentation)
+        my_self = self.copy()
         for mapper in my_self.protocolMappers:
             if mapper.state == 'absent':
                 my_self.protocolMappers.remove(mapper)
@@ -3859,3 +3891,10 @@ class ProtocolMapper():
                 self.consentRequired = rep[key]
             elif key == 'config':
                 self.config = rep[key]
+            elif key == 'state':
+                self.state = rep[key]
+
+    def copy(self):
+        mapper_copy = ProtocolMapper(rep=self.getRepresentation())
+        mapper_copy.state = self.state
+        return mapper_copy

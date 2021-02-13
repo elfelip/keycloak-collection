@@ -244,7 +244,24 @@ class KeycloakClientScopeTestCase(ModuleTestCase):
             2,
             'Protocol Mapper not added to client scope: {}'.format(str(len(updated_scope.protocolMappers))))
 
-    def test_update_client_scope_delete_protocol_mapper(self):
+    def test_update_client_scope_delete_protocol_mapper_remove(self):
+        toUpdate = self.testClientScopes[0].copy()
+        toUpdate.update(self.kcparams.copy())
+        toUpdate.update(self.meta_params.copy())
+        toUpdate["state"] = "present"
+        del(toUpdate['protocolMappers'][0])
+        set_module_args(toUpdate)
+        with self.assertRaises(AnsibleExitJson) as results:
+            self.module.main()
+        scope = ClientScope(rep=toUpdate)
+        updated_scope = ClientScope(rep=results.exception.args[0]['client_scope'])
+        self.assertTrue(results.exception.args[0]['changed'])
+        self.assertEquals(
+            len(updated_scope.protocolMappers), 
+            0,
+            'Protocol Mapper not deleted from client scope: {}'.format(str(len(updated_scope.protocolMappers))))
+
+    def test_update_client_scope_delete_protocol_mapper_using_state_absent(self):
         toUpdate = self.testClientScopes[0].copy()
         toUpdate.update(self.kcparams.copy())
         toUpdate.update(self.meta_params.copy())
