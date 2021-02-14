@@ -29,7 +29,7 @@
 
 # Create a client scope
 - name: Create client scope
-  keycloak_clent_scope:
+  elfelip.keycloak.keycloak_clent_scope:
     auth_keycloak_url: "{{ keycloak_url }}"
     auth_username: "{{ keycloak_admin_user }}"
     auth_password: "{{ keycloak_admin_password }}"
