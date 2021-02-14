@@ -1,16 +1,16 @@
 version: "3.3"
 services:
-  testkc:
+  keycloak:
     image: "jboss/keycloak:latest"
+    hostname: keycloak
     ports:
       - "18081:8080"
-    links:
-      - "testldap:testldap"
     environment:
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
   testldap:
     image: "minkwe/389ds:latest"
+    hostname: testldap
     ports:
     - "10389:389"
     
